@@ -12,9 +12,13 @@ resource "random_id" "random" {
 #  location = var.LOCATION
 #}
 
+data "azurerm_resource_group" "jmeter_rg" {
+  name = var.RESOURCE_GROUP_NAME
+}
+
 resource "azurerm_virtual_network" "jmeter_vnet" {
   name                = "${var.PREFIX}vnet"
-  location            = azurerm_resource_group.jmeter_rg.location
+  location            = data.azurerm_resource_group.jmeter_rg.location
   resource_group_name = var.RESOURCE_GROUP_NAME
   address_space       = ["${var.VNET_ADDRESS_SPACE}"]
 }
@@ -39,7 +43,7 @@ resource "azurerm_subnet" "jmeter_subnet" {
 
 resource "azurerm_network_profile" "jmeter_net_profile" {
   name                = "${var.PREFIX}netprofile"
-  location            = azurerm_resource_group.jmeter_rg.location
+  location            = data.azurerm_resource_group.jmeter_rg.location
   resource_group_name = var.RESOURCE_GROUP_NAME
 
   container_network_interface {
@@ -54,8 +58,8 @@ resource "azurerm_network_profile" "jmeter_net_profile" {
 
 resource "azurerm_storage_account" "jmeter_storage" {
   name                = "${var.PREFIX}storage${random_id.random.hex}"
-  resource_group_name = azurerm_resource_group.jmeter_rg.name
-  location            = azurerm_resource_group.jmeter_rg.location
+  resource_group_name = var.RESOURCE_GROUP_NAME
+  location            = data.azurerm_resource_group.jmeter_rg.location
 
   account_tier             = "Standard"
   account_replication_type = "LRS"
@@ -68,14 +72,14 @@ resource "azurerm_storage_account" "jmeter_storage" {
 
 resource "azurerm_storage_share" "jmeter_share" {
   name                 = "jmeter"
-  storage_account_name = azurerm_storage_account.jmeter_storage.name
+  storage_account_name = data.azurerm_storage_account.jmeter_storage.name
   quota                = var.JMETER_STORAGE_QUOTA_GIGABYTES
 }
 
 resource "azurerm_container_group" "jmeter_workers" {
   count               = var.JMETER_WORKERS_COUNT
   name                = "${var.PREFIX}-worker${count.index}"
-  location            = azurerm_resource_group.jmeter_rg.location
+  location            = data.azurerm_resource_group.jmeter_rg.location
   resource_group_name = var.RESOURCE_GROUP_NAME
 
   ip_address_type = "private"
@@ -119,7 +123,7 @@ resource "azurerm_container_group" "jmeter_workers" {
 
 resource "azurerm_container_group" "jmeter_controller" {
   name                = "${var.PREFIX}-controller"
-  location            = azurerm_resource_group.jmeter_rg.location
+  location            = data.azurerm_resource_group.jmeter_rg.location
   resource_group_name = var.RESOURCE_GROUP_NAME
 
   ip_address_type = "private"
