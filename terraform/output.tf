@@ -1,5 +1,5 @@
 output "resource_group_name" {
-  value = var.RESOURCE_GROUP_NAME
+  value = "${var.RESOURCE_GROUP_NAME}"
 }
 
 output "storage_account_name" {
